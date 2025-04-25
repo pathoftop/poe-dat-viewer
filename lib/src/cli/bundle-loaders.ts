@@ -2,6 +2,8 @@ import { decompressSliceInBundle } from '../bundles/bundle.js'
 import { getFileInfo, readIndexBundle } from '../bundles/index-bundle.js'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import {default as fetch2} from 'node-fetch'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 const BUNDLE_DIR = 'Bundles2'
 
@@ -64,12 +66,19 @@ interface IBundleLoader {
 }
 
 export class CdnBundleLoader {
+  proxyAgent: HttpsProxyAgent<string> | undefined
   private constructor (
     private cacheDir: string,
-    private patchVer: string
-  ) {}
+    private patchVer: string,
+    private proxy?: string,
+  ) {
+    if (this.proxy) {
+      console.log(`Using proxy: ${this.proxy}`)
+      this.proxyAgent = new HttpsProxyAgent(this.proxy)
+    }
+  }
 
-  static async create (cacheRoot: string, patchVer: string) {
+  static async create (cacheRoot: string, patchVer: string, httpProxy?: string) {
     const cacheDir = path.join(cacheRoot, patchVer)
     try {
       await fs.access(cacheDir)
@@ -78,7 +87,7 @@ export class CdnBundleLoader {
       await fs.rm(cacheRoot, { recursive: true, force: true })
       await fs.mkdir(cacheDir, { recursive: true })
     }
-    return new CdnBundleLoader(cacheDir, patchVer)
+    return new CdnBundleLoader(cacheDir, patchVer, httpProxy)
   }
 
   async fetchFile (name: string): Promise<ArrayBuffer> {
@@ -93,10 +102,12 @@ export class CdnBundleLoader {
     console.log(`Loading from CDN: ${name} ...`)
 
     const webpath = `/${this.patchVer}/${BUNDLE_DIR}/${name}`
-    const response = await fetch(
+    const response = await fetch2(
       webpath.startsWith('/4.')
         ? `https://patch-poe2.poecdn.com${webpath}`
-        : `https://patch.poecdn.com${webpath}`)
+        : `https://patch.poecdn.com${webpath}`, {
+          agent: this.proxyAgent,
+        })
     if (!response.ok) {
       console.error(`Failed to fetch ${name} from CDN.`)
       process.exit(1)

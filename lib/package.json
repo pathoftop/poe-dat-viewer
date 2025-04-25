@@ -7,7 +7,6 @@
     "./bundles.js": "./dist/bundles.js",
     "./dat.js": "./dist/dat.js"
   },
-  "files": ["dist/**/*"],
   "files": [
     "dist/**/*"
   ],
@@ -16,6 +15,8 @@
     "url": "https://github.com/SnosMe/poe-dat-viewer"
   },
   "dependencies": {
+    "https-proxy-agent": "^7.0.6",
+    "node-fetch": "^3.3.2",
     "ooz-wasm": "^2.0.0",
     "pathofexile-dat-schema": "^8.0.0"
   },

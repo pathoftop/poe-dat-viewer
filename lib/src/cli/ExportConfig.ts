@@ -9,4 +9,5 @@ export interface ExportConfig {
     name: string
     columns: string[]
   }>
+  httpProxy?: string
 }

@@ -14,7 +14,7 @@ import * as path from 'path'
   let loader: loaders.FileLoader
   if (config.patch) {
     loader = await loaders.FileLoader.create(
-      await loaders.CdnBundleLoader.create(path.join(process.cwd(), '/.cache'), config.patch))
+      await loaders.CdnBundleLoader.create(path.join(process.cwd(), '/.cache'), config.patch, config.httpProxy))
   } else if (config.steam) {
     loader = await loaders.FileLoader.create(
       new loaders.SteamBundleLoader(config.steam))
