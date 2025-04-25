@@ -7,7 +7,7 @@ export interface ExportConfig {
   translations?: string[]
   tables?: Array<{
     name: string
-    columns: string[]
+    columns?: string[]
   }>
   httpProxy?: string
 }
