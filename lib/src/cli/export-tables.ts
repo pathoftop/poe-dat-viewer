@@ -6,6 +6,8 @@ import { DatFile, readDatFile } from '../dat/dat-file.js'
 import { readColumn } from '../dat/reader.js'
 import * as fs from 'fs/promises'
 import * as path from 'path'
+import { default as fetch2 } from 'node-fetch'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 const TRANSLATIONS = [
   { name: 'English', path: 'Data' },
@@ -29,7 +31,7 @@ export async function exportTables (
   if (!config.tables?.length) return
 
   console.log('Loading schema for dat files')
-  const schema = await (await fetch(SCHEMA_URL)).json()
+  const schema = await fetchSchema(config)
   if (schema.version !== SCHEMA_VERSION) {
     console.error('Schema has format not compatible with this package. Check for "pathofexile-dat" updates.')
     process.exit(1)
@@ -67,7 +69,27 @@ export async function exportTables (
   }
 }
 
-export function exportAllRows (headers: NamedHeader[], datFile: DatFile) {
+async function fetchSchema(config: ExportConfig) {
+  const schemaPath = path.join(process.cwd(), '/schema.min.json')
+
+  try {
+    await fs.access(schemaPath)
+    const schema = await fs.readFile(schemaPath, { encoding: 'utf-8' })
+    return JSON.parse(schema) as SchemaFile
+  } catch {
+  }
+
+  let proxyAgent = undefined
+  if (config.httpProxy) {
+    proxyAgent = new HttpsProxyAgent(config.httpProxy)
+  }
+
+  const schema = await (await fetch2(SCHEMA_URL, { agent: proxyAgent })).json()
+  await fs.writeFile(schemaPath, JSON.stringify(schema, null, 2), { encoding: 'utf-8' })
+  return schema as unknown as SchemaFile
+}
+
+export function exportAllRows(headers: NamedHeader[], datFile: DatFile) {
   const columns = headers
     .map(header => ({
       name: header.name,
