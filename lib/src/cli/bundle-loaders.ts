@@ -2,10 +2,17 @@ import { decompressSliceInBundle } from '../bundles/bundle.js'
 import { getFileInfo, readIndexBundle } from '../bundles/index-bundle.js'
 import * as fs from 'fs/promises'
 import * as path from 'path'
-import {default as fetch2} from 'node-fetch'
+import { default as fetch2 } from 'node-fetch'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { spawn } from 'child_process'
 
 const BUNDLE_DIR = 'Bundles2'
+
+export interface IFileLoader {
+  getFileContents: (fullPath: string) => Promise<Uint8Array>
+  tryGetFileContents: (fullPath: string) => Promise<Uint8Array | null>
+  clearBundleCache: () => void
+}
 
 export class FileLoader {
   private bundleCache = new Map<string, ArrayBuffer>()
@@ -126,4 +133,83 @@ export class SteamBundleLoader {
   async fetchFile (name: string): Promise<ArrayBuffer> {
     return await fs.readFile(path.join(this.gameDir, BUNDLE_DIR, name))
   }
+}
+
+export class OfficialFileLoader {
+  constructor(
+    private ggpkExtractor: GGPKExtractor
+  ) { }
+
+  static async create(bundleLoader: GGPKExtractor) {
+    return new OfficialFileLoader(bundleLoader)
+  }
+
+  async getFileContents(fullPath: string): Promise<Uint8Array> {
+    const contents = await this.tryGetFileContents(fullPath)
+    if (!contents) {
+      throw new Error(`File no longer exists: ${fullPath}`)
+    }
+    return contents
+  }
+
+  async tryGetFileContents(fullPath: string): Promise<Uint8Array | null> {
+    return new Uint8Array(await this.ggpkExtractor.fetchFile(fullPath))
+  }
+
+  clearBundleCache() { }
+}
+
+export class GGPKExtractor {
+  constructor(
+    private cacheDir: string,
+    private gameDir: string,
+  ) {
+  }
+
+  static async create(cacheRoot: string, patchVer: string, gameDir: string) {
+    const cacheDir = path.join(cacheRoot, patchVer)
+    try {
+      await fs.access(cacheDir)
+    } catch {
+      console.log('Creating new extract cache...')
+      await fs.rm(cacheRoot, { recursive: true, force: true })
+      await fs.mkdir(cacheDir, { recursive: true })
+    }
+    return new GGPKExtractor(cacheDir, gameDir)
+  }
+
+  async fetchFile(name: string): Promise<ArrayBuffer> {
+    const cachedFilePath = path.join(this.cacheDir, name.replace(/\//g, '@'))
+
+    try {
+      await fs.access(cachedFilePath)
+      const content = await fs.readFile(cachedFilePath)
+      return content
+    } catch { }
+
+    console.log(`Extracting from Content.ggpk: ${name} ...`)
+    const contentGGPK = path.join(this.gameDir, 'Content.ggpk')
+    await extractBundledGGPK3(contentGGPK, name.toLowerCase(), cachedFilePath)
+
+    await fs.access(cachedFilePath)
+    const content = await fs.readFile(cachedFilePath)
+    return content
+  }
+}
+
+function extractBundledGGPK3(
+  contentGGPK: string,
+  file: string,
+  out: string
+) {
+  return new Promise<void>((resolve, reject) => {
+    const extractor = spawn('ExtractBundledGGPK3', [contentGGPK, file, out], { stdio: ['ignore', 'inherit', 'inherit'] })
+    extractor.on('exit', (code) => {
+      if (code === 0) {
+        resolve()
+      } else {
+        reject(new Error(`extractor exited with code ${code}.`))
+      }
+    })
+  })
 }

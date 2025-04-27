@@ -1,6 +1,6 @@
 import { parseFile as parseSpriteIndex, SpriteImage } from '../sprites/layout-parser.js'
 import type { ExportConfig } from './ExportConfig.js'
-import { FileLoader } from './bundle-loaders.js'
+import { IFileLoader } from './bundle-loaders.js'
 import { spawn } from 'child_process'
 import * as fs from 'fs/promises'
 import * as path from 'path'
@@ -26,7 +26,7 @@ function isInsideSprite (path: string) {
 export async function exportFiles (
   config: ExportConfig,
   outDir: string,
-  loader: FileLoader
+  loader: IFileLoader
 ) {
   if (!config.files?.length) return
 

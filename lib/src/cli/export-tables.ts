@@ -1,6 +1,6 @@
 import { SCHEMA_URL, SCHEMA_VERSION, SchemaFile, ValidFor } from 'pathofexile-dat-schema'
 import type { ExportConfig } from './ExportConfig.js'
-import { FileLoader } from './bundle-loaders.js'
+import { IFileLoader } from './bundle-loaders.js'
 import { Header, getHeaderLength } from '../dat/header.js'
 import { DatFile, readDatFile } from '../dat/dat-file.js'
 import { readColumn } from '../dat/reader.js'
@@ -26,7 +26,7 @@ const TRANSLATIONS_NONE = TRANSLATIONS[0]
 export async function exportTables (
   config: ExportConfig,
   outDir: string,
-  loader: FileLoader
+  loader: IFileLoader
 ) {
   if (!config.tables?.length) return
 
