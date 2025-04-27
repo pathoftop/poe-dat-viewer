@@ -19,7 +19,8 @@ const TRANSLATIONS = [
   { name: 'Russian', path: 'Data/Russian' },
   { name: 'Spanish', path: 'Data/Spanish' },
   { name: 'Thai', path: 'Data/Thai' },
-  { name: 'Traditional Chinese', path: 'Data/Traditional Chinese' }
+  { name: 'Traditional Chinese', path: 'Data/Traditional Chinese' },
+  { name: 'Simplified Chinese', path: 'Data/Simplified Chinese' },
 ]
 const TRANSLATIONS_NONE = TRANSLATIONS[0]
 
@@ -44,13 +45,16 @@ export async function exportTables (
     await fs.rm(path.join(outDir, tr.name), { recursive: true, force: true })
     await fs.mkdir(path.join(outDir, tr.name), { recursive: true })
   }
+
+  const datExt = config.mode === 'tencent' ?'.dat64':'.datc64'
+
   for (const tr of includeTranslations) {
     loader.clearBundleCache()
     for (const target of config.tables) {
       console.log(`Exporting table "${tr.path}/${target.name}"`)
-      const datFile = readDatFile('.datc64',
-        await loader.tryGetFileContents(`${tr.path}/${target.name}.datc64`) ??
-        await loader.getFileContents(`${TRANSLATIONS_NONE.path}/${target.name}.datc64`))
+      const datFile = readDatFile(datExt,
+        await loader.tryGetFileContents(`${tr.path}/${target.name}${datExt}`) ??
+        await loader.getFileContents(`${TRANSLATIONS_NONE.path}/${target.name}${datExt}`))
       let headers = importHeaders(target.name, datFile, config, schema)
       if (target.columns && target.columns.length > 0) {
         headers = headers.filter(hdr => target.columns!.includes(hdr.name))
@@ -122,7 +126,7 @@ function importHeaders (
 ): NamedHeader[] {
   const headers = [] as NamedHeader[]
 
-  const validFor = (config.patch?.startsWith('4.') || config.steam?.includes('Path of Exile 2'))
+  const validFor = (config.patch?.startsWith('4.') || config.gameDir?.includes('Path of Exile 2'))
     ? ValidFor.PoE2
     : ValidFor.PoE1
   const sch = schema.tables.find(s => s.name === name && (s.validFor & validFor))!

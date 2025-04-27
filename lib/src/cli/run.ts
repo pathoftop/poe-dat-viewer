@@ -11,15 +11,30 @@ import * as path from 'path'
   const config: ExportConfig = JSON.parse(
     await fs.readFile(path.join(process.cwd(), '/config.json'), { encoding: 'utf-8' }))
 
-  let loader: loaders.FileLoader
-  if (config.patch) {
+  let loader: loaders.IFileLoader
+  if (config.mode === 'cdn') {
+    if (!config.patch) {
+      console.error('Should specify "patch" in config.json.')
+      process.exit(1)
+    }
     loader = await loaders.FileLoader.create(
       await loaders.CdnBundleLoader.create(path.join(process.cwd(), '/.cache'), config.patch, config.httpProxy))
-  } else if (config.steam) {
+  } else if (config.mode === 'stream') {
+    if (!config.gameDir) {
+      console.error('Should specify "gameDir" in config.json.')
+      process.exit(1)
+    }
     loader = await loaders.FileLoader.create(
-      new loaders.SteamBundleLoader(config.steam))
+      new loaders.SteamBundleLoader(config.gameDir!))
+  } else if (config.mode === 'official'|| config.mode === 'tencent') {
+    if (!config.patch || !config.gameDir) {
+      console.error('Should specify "patch" and "gameDir" in config.json.')
+      process.exit(1)
+    }
+    loader = await loaders.OfficialFileLoader.create(
+      await loaders.GGPKExtractor.create(path.join(process.cwd(), '/.cache'), config.patch, config.gameDir!))
   } else {
-    console.error('Should specify either "patch" or "steam" in config.json.')
+    console.error('Should specify "mode" in config.json.')
     process.exit(1)
   }
 
