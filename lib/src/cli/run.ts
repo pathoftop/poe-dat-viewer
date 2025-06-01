@@ -19,7 +19,7 @@ import * as path from 'path'
     }
     loader = await loaders.FileLoader.create(
       await loaders.CdnBundleLoader.create(path.join(process.cwd(), '/.cache'), config.patch, config.httpProxy))
-  } else if (config.mode === 'stream') {
+  } else if (config.mode === 'steam') {
     if (!config.gameDir) {
       console.error('Should specify "gameDir" in config.json.')
       process.exit(1)

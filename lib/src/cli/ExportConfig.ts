@@ -1,7 +1,7 @@
 export interface ExportConfig {
-  mode: 'cdn'|'stream'|'official'|'tencent',
+  mode: 'cdn'|'steam'|'official'|'tencent',
   // can be found on https://raw.githubusercontent.com/poe-tool-dev/latest-patch-version/main/latest.txt
-  // if mode is not "stream", patch is required
+  // if mode is not "steam", patch is required
   patch?: string
   // "...steamapps/common/Path of Exile"
   // if mode is not "cdn", gameDir is required

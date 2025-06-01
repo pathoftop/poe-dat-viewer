@@ -27,7 +27,7 @@ npm install -g
 
 ### config.json
 
-在存储解包文件的目录创建config.json（参考[类型注释](https://github.com/pathoftop/poe-dat-viewer/blob/master/lib/src/cli/ExportConfig.ts)）：
+在存储解包文件的目录创建config.json（参考[ExportConfig](https://github.com/pathoftop/poe-dat-viewer/blob/master/lib/src/cli/ExportConfig.ts)）：
 
 ```json
 {
