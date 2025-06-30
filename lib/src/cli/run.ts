@@ -27,12 +27,12 @@ import * as path from 'path'
     loader = await loaders.FileLoader.create(
       new loaders.SteamBundleLoader(config.gameDir!))
   } else if (config.mode === 'official'|| config.mode === 'tencent') {
-    if (!config.patch || !config.gameDir) {
-      console.error('Should specify "patch" and "gameDir" in config.json.')
+    if (!config.gameDir) {
+      console.error('Should specify "gameDir" in config.json.')
       process.exit(1)
     }
     loader = await loaders.OfficialFileLoader.create(
-      await loaders.GGPKExtractor.create(path.join(process.cwd(), '/.cache'), config.patch, config.gameDir!))
+      await loaders.GGPKExtractor.create(path.join(process.cwd(), '/.cache'), config.gameDir!, config.mode))
   } else {
     console.error('Should specify "mode" in config.json.')
     process.exit(1)
