@@ -21,10 +21,9 @@ export function readDatFile (filenameOrExt: string, content: ArrayBufferLike): D
     throw new Error('Invalid file size.')
   }
   
-  // tencent client uses .dat64 currently
-  //if (!filenameOrExt.endsWith('datc64')) {
-  //  throw new Error('Only datc64 files are supported.')
-  //}
+  if (!filenameOrExt.endsWith('datc64')) {
+    throw new Error('Only datc64 files are supported.')
+  }
 
   const file = new Uint8Array(content)
   const fileReader = new DataView(file.buffer)

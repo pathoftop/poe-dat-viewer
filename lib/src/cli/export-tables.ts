@@ -46,15 +46,13 @@ export async function exportTables (
     await fs.mkdir(path.join(outDir, tr.name), { recursive: true })
   }
 
-  const datExt = config.mode === 'tencent' ?'.dat64':'.datc64'
-
   for (const tr of includeTranslations) {
     loader.clearBundleCache()
     for (const target of config.tables) {
       console.log(`Exporting table "${tr.path}/${target.name}"`)
-      const datFile = readDatFile(datExt,
-        await loader.tryGetFileContents(`${tr.path}/${target.name}${datExt}`) ??
-        await loader.getFileContents(`${TRANSLATIONS_NONE.path}/${target.name}${datExt}`))
+      const datFile = readDatFile('.datc64',
+        await loader.tryGetFileContents(`${tr.path}/${target.name}.datc64`) ??
+        await loader.getFileContents(`${TRANSLATIONS_NONE.path}/${target.name}.datc64`))
       let headers = importHeaders(target.name, datFile, config, schema)
       if (target.columns && target.columns.length > 0) {
         headers = headers.filter(hdr => target.columns!.includes(hdr.name))
